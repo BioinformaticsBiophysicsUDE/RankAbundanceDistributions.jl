@@ -576,7 +576,7 @@ function RAD_set_normalize(
 
     n_samples = length(unique(df[:sample]))
     if R == 0 #find out the minimum of all the maximum sample ranks
-        max_ranks = by(df, :sample, d -> maximum(d[:rank]))
+        max_ranks = DataFrames.by(df, :sample, d -> maximum(d[:rank]))
         R = minimum(max_ranks[:x1])
     end
 
@@ -586,7 +586,7 @@ function RAD_set_normalize(
 
     if length(procIDs) == 1 #serial normalization of different RADs
         
-        new_df = by(df, :sample,
+        new_df = DataFrames.by(df, :sample,
                     d -> MaxRank_normalize(d, R, n, conf_level, n_boots, verbose))
      
     else #parallel normalization of different RADs
@@ -597,7 +597,7 @@ function RAD_set_normalize(
         
         #distribute the normalization over processes, one data frame subset per process
         for i_proc in 1:n_procs
-            refs[i_proc] = Distributed.@spawnat procIDs[i_proc] by(df[from_ix[i_proc]:to_ix[i_proc],:], :sample,
+            refs[i_proc] = Distributed.@spawnat procIDs[i_proc] DataFrames.by(df[from_ix[i_proc]:to_ix[i_proc],:], :sample,
                                        d -> MaxRank_normalize(d, R, n, conf_level, n_boots, verbose))
         end
         
@@ -752,14 +752,14 @@ function RAD_set_representatives(cMDSclusters::DataFrames.DataFrame, normRADs::D
         samples_i = cMDSclusters[convert(Array{Bool,1}, map(x -> in(x, set_i[:sample]), cMDSclusters[:sample])),:sample]
 
         #then determine the min for each rank in the set:
-        x = by(normRADs[convert(Array{Bool,1},
+        x = DataFrames.by(normRADs[convert(Array{Bool,1},
                                 map(x -> in(x, samples_i), normRADs[:sample])),:],
                :rank,
                df -> minimum(df[:abundance]))
         new_repres_RAD[:min] = x[:x1]
 
         #same for maximum:
-        x = by(normRADs[convert(Array{Bool,1},
+        x = DataFrames.by(normRADs[convert(Array{Bool,1},
                                 map(x -> in(x, samples_i), normRADs[:sample])),:],
                :rank,
                df -> maximum(df[:abundance]))
@@ -798,21 +798,21 @@ function RAD_cmds_set_means(cMDSclusters::DataFrames.DataFrame, normRADs::DataFr
             unique(normRADs[convert(Array{Bool,1}, map(x -> in(x, samples_i), normRADs[:sample])),:rank])
 
         #then determine the mean for each rank in the set:
-        x = by(normRADs[convert(Array{Bool,1},
+        x = DataFrames.by(normRADs[convert(Array{Bool,1},
                                 map(x -> in(x, samples_i), normRADs[:sample])),:],
                :rank,
                df -> mean(df[:abundance]))
         new_mean_RAD[:mean_abundance] = x[:x1]
 
         #determine the min for each rank in the set:
-        x = by(normRADs[convert(Array{Bool,1},
+        x = DataFrames.by(normRADs[convert(Array{Bool,1},
                                 map(x -> in(x, samples_i), normRADs[:sample])),:],
                :rank,
                df -> minimum(df[:abundance]))
         new_mean_RAD[:min] = x[:x1]
 
         #same for maximum:
-        x = by(normRADs[convert(Array{Bool,1},
+        x = DataFrames.by(normRADs[convert(Array{Bool,1},
                                 map(x -> in(x, samples_i), normRADs[:sample])),:],
                :rank,
                df -> maximum(df[:abundance]))
@@ -857,13 +857,13 @@ function RAD_set_mean(
                       )
 
     #first check whether all RADs have same richness
-    richness = by(RADs, :sample, x -> maximum(x[:rank]))[:x1]
+    richness = DataFrames.by(RADs, :sample, x -> maximum(x[:rank]))[:x1]
     if minimum(richness) != maximum(richness)
         error("RADs do not have same richness")
     end
 
     meanRAD = hcat(DataFrames.DataFrame(sample = fill(name,richness[1])),
-                   by(RADs, :rank, df -> mean(df[:abundance])))
+                   DataFrames.by(RADs, :rank, df -> mean(df[:abundance])))
     rename!(meanRAD, :x1 => :abundance)
 
 
@@ -1260,7 +1260,7 @@ Output:
         - data frame with columns 'sample' and 'entropy'
 """
 function RAD_set_entropies(RADs::DataFrames.DataFrame)
-    return rename(by(RADs, :sample, d -> entropy(d[:abundance])), :x1 => :entropy)
+    return rename(DataFrames.by(RADs, :sample, d -> entropy(d[:abundance])), :x1 => :entropy)
 end
 
 """
@@ -1275,9 +1275,9 @@ Output:
 """
 function RAD_set_evenness(RADs::DataFrames.DataFrame, method::Symbol=:Shannon)
     if method == :Shannon
-        return rename(by(RADs, :sample, d -> entropy(d[:abundance])/log(length(d[:abundance]))), :x1 => :evenness)
+        return rename(DataFrames.by(RADs, :sample, d -> entropy(d[:abundance])/log(length(d[:abundance]))), :x1 => :evenness)
     elseif method == :Heip
-        return rename(by(RADs, :sample, d -> exp(entropy(d[:abundance]))/length(d[:abundance])), :x1 => :evenness)
+        return rename(DataFrames.by(RADs, :sample, d -> exp(entropy(d[:abundance]))/length(d[:abundance])), :x1 => :evenness)
     else
         error("evenness method not implemented")
     end
@@ -1293,7 +1293,7 @@ Output:
     - minimum richness
 """
 function RAD_set_minimum_richness(RADs::DataFrames.DataFrame)
-    max_ranks = by(RADs, :sample, d -> maximum(d[:rank]))
+    max_ranks = DataFrames.by(RADs, :sample, d -> maximum(d[:rank]))
     return minimum(max_ranks[:x1])
 end
 
@@ -1308,7 +1308,7 @@ Output:
     - data frame with columns :sample and :richness
 """
 function RAD_set_richness(RADs::DataFrames.DataFrame)
-    max_ranks = by(RADs, :sample, d -> maximum(d[:rank]))
+    max_ranks = DataFrames.by(RADs, :sample, d -> maximum(d[:rank]))
     return rename!(max_ranks, :x1 => :richness)
 end
 
@@ -1322,7 +1322,7 @@ Output:
     - data frame with columns :sample and :abundance_sum
 """
 function RAD_set_abundance_sum(RADs::DataFrames.DataFrame)
-    abundance_sums = by(RADs, :sample, d -> sum(d[:abundance]))
+    abundance_sums = DataFrames.by(RADs, :sample, d -> sum(d[:abundance]))
     return rename!(abundance_sums, :x1 => :abundance_sum)
 end
 
@@ -1488,30 +1488,30 @@ function RAD_set_summary(df::DataFrames.DataFrame)
 
     summary[1,2] = length(unique(df[:sample]))
     
-    richness = by(df, :sample, x -> maximum(x[:rank]))[:x1]
+    richness = DataFrames.by(df, :sample, x -> maximum(x[:rank]))[:x1]
     summary[2,2] = minimum(richness)
     summary[3,2] = median(richness)
     summary[4,2] = maximum(richness)
 
-    abundance_sum = by(df, :sample, x -> sum(x[:abundance]))[:x1]
+    abundance_sum = DataFrames.by(df, :sample, x -> sum(x[:abundance]))[:x1]
     summary[5,2] = minimum(abundance_sum)
     summary[6,2] = median(abundance_sum)
     summary[7,2] = maximum(abundance_sum)
 
     #minima of abundance
-    aggregated = by(df, :sample, x -> minimum(x[:abundance]))[:x1]
+    aggregated = DataFrames.by(df, :sample, x -> minimum(x[:abundance]))[:x1]
     summary[8,2] = minimum(aggregated)
     summary[9,2] = median(aggregated)
     summary[10,2] = maximum(aggregated)
 
     #medians of abundance
-    aggregated = by(df, :sample, x -> median(x[:abundance]))[:x1]
+    aggregated = DataFrames.by(df, :sample, x -> median(x[:abundance]))[:x1]
     summary[11,2] = minimum(aggregated)
     summary[12,2] = median(aggregated)
     summary[13,2] = maximum(aggregated)
 
     #maxima of abundance
-    aggregated = by(df, :sample, x -> maximum(x[:abundance]))[:x1]
+    aggregated = DataFrames.by(df, :sample, x -> maximum(x[:abundance]))[:x1]
     summary[14,2] = minimum(aggregated)
     summary[15,2] = median(aggregated)
     summary[16,2] = maximum(aggregated)
@@ -1659,7 +1659,7 @@ Output:
 function RAD_set_abundance_normalization(RADs::DataFrames.DataFrame)
     rads = copy(RADs)
     sort!(rads, cols = [:sample, :rank])
-    rads[:abundance] = by(rads, :sample, df -> df[:abundance] ./ sum(df[:abundance]))[:x1]
+    rads[:abundance] = DataFrames.by(rads, :sample, df -> df[:abundance] ./ sum(df[:abundance]))[:x1]
     return rads
 end
 
