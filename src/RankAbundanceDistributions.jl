@@ -597,7 +597,7 @@ function RAD_set_normalize(
         
         #distribute the normalization over processes, one data frame subset per process
         for i_proc in 1:n_procs
-            refs[i_proc] = @spawnat procIDs[i_proc] by(df[from_ix[i_proc]:to_ix[i_proc],:], :sample,
+            refs[i_proc] = Distributed.@spawnat procIDs[i_proc] by(df[from_ix[i_proc]:to_ix[i_proc],:], :sample,
                                        d -> MaxRank_normalize(d, R, n, conf_level, n_boots, verbose))
         end
         
