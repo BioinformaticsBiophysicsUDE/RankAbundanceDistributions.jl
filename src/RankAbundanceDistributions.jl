@@ -627,7 +627,7 @@ end
 function RAD_set_to_distmat(df::DataFrames.DataFrame, dist::Any)
 
     #reformat long dataframe to wide to array
-    x = unstack(df, :rank, :sample, :abundance)
+    x = DataFrames.unstack(df, :rank, :sample, :abundance)
     nx = length(x)
 #    sample_names = map(s -> string(s), names(x))[2:nx]
 
@@ -641,7 +641,7 @@ function RAD_set_cMDS(df::DataFrames.DataFrame, d::Array{Float64,2}, dim::Int64=
 
     #compute eigenvalues
     G = dmat2gram(d)
-    E = eigen!(Symmetric(G))
+    E = LinearAlgebra.eigen!(Symmetric(G))
 
     #do classical MDS:
     cMDS = classical_mds(d, dim)
@@ -1218,9 +1218,9 @@ Output:
 """
 function RAD_set_plot(RADs::DataFrames.DataFrame, plot_CIs::Bool=false)
     if plot_CIs == true
-        return StatPlots.@df RADs plot(:rank, :abundance, xaxis=("rank",:log10), yaxis=("abundance",:log10), ribbon=(:abundance-:lower_ci,:upper_ci-:abundance), group=:sample)
+        return StatPlots.@df RADs Plots.plot(:rank, :abundance, xaxis=("rank",:log10), yaxis=("abundance",:log10), ribbon=(:abundance-:lower_ci,:upper_ci-:abundance), group=:sample)
     else
-        return StatPlots.@df RADs plot(:rank, :abundance, group=:sample, xaxis=(:log10, "rank"), yaxis=(:log10, "abundance"))
+        return StatPlots.@df RADs Plots.plot(:rank, :abundance, group=:sample, xaxis=(:log10, "rank"), yaxis=(:log10, "abundance"))
     end
 end
 
@@ -1260,7 +1260,7 @@ Output:
         - data frame with columns 'sample' and 'entropy'
 """
 function RAD_set_entropies(RADs::DataFrames.DataFrame)
-    return rename(DataFrames.by(RADs, :sample, d -> entropy(d[:abundance])), :x1 => :entropy)
+    return rename(DataFrames.by(RADs, :sample, d -> StatsBase.entropy(d[:abundance])), :x1 => :entropy)
 end
 
 """
@@ -1275,9 +1275,9 @@ Output:
 """
 function RAD_set_evenness(RADs::DataFrames.DataFrame, method::Symbol=:Shannon)
     if method == :Shannon
-        return rename(DataFrames.by(RADs, :sample, d -> entropy(d[:abundance])/log(length(d[:abundance]))), :x1 => :evenness)
+        return rename(DataFrames.by(RADs, :sample, d -> StatsBase.entropy(d[:abundance])/log(length(d[:abundance]))), :x1 => :evenness)
     elseif method == :Heip
-        return rename(DataFrames.by(RADs, :sample, d -> exp(entropy(d[:abundance]))/length(d[:abundance])), :x1 => :evenness)
+        return rename(DataFrames.by(RADs, :sample, d -> exp(StatsBase.entropy(d[:abundance]))/length(d[:abundance])), :x1 => :evenness)
     else
         error("evenness method not implemented")
     end
@@ -1490,30 +1490,30 @@ function RAD_set_summary(df::DataFrames.DataFrame)
     
     richness = DataFrames.by(df, :sample, x -> maximum(x[:rank]))[:x1]
     summary[2,2] = minimum(richness)
-    summary[3,2] = median(richness)
+    summary[3,2] = Statistics.median(richness)
     summary[4,2] = maximum(richness)
 
     abundance_sum = DataFrames.by(df, :sample, x -> sum(x[:abundance]))[:x1]
     summary[5,2] = minimum(abundance_sum)
-    summary[6,2] = median(abundance_sum)
+    summary[6,2] = Statistics.median(abundance_sum)
     summary[7,2] = maximum(abundance_sum)
 
     #minima of abundance
     aggregated = DataFrames.by(df, :sample, x -> minimum(x[:abundance]))[:x1]
     summary[8,2] = minimum(aggregated)
-    summary[9,2] = median(aggregated)
+    summary[9,2] = Statistics.median(aggregated)
     summary[10,2] = maximum(aggregated)
 
-    #medians of abundance
-    aggregated = DataFrames.by(df, :sample, x -> median(x[:abundance]))[:x1]
+    #Statistics.medians of abundance
+    aggregated = DataFrames.by(df, :sample, x -> Statistics.median(x[:abundance]))[:x1]
     summary[11,2] = minimum(aggregated)
-    summary[12,2] = median(aggregated)
+    summary[12,2] = Statistics.median(aggregated)
     summary[13,2] = maximum(aggregated)
 
     #maxima of abundance
     aggregated = DataFrames.by(df, :sample, x -> maximum(x[:abundance]))[:x1]
     summary[14,2] = minimum(aggregated)
-    summary[15,2] = median(aggregated)
+    summary[15,2] = Statistics.median(aggregated)
     summary[16,2] = maximum(aggregated)
 
     return summary
