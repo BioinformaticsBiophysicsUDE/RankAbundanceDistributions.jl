@@ -395,7 +395,7 @@ function random_powerlaw_RAD(S::Int64, #richness
     w = WeightVec((1:S).^(-k))
     n_ranks = 0
     while n_ranks < S #stop when richness S is reached
-        i = sample(1:S,w)
+        i = StatsBase.sample(1:S,w)
         if a[i] == 0
             n_ranks += 1
         end
@@ -443,7 +443,7 @@ function random_brokenstick_RAD(S::Int64, #richness
     w = WeightVec(w)
     n_ranks = 0
     while n_ranks < S #stop when richness S is reached
-        i = sample(1:S,w)
+        i = StatsBase.sample(1:S,w)
         if a[i] == 0
             n_ranks += 1
         end
@@ -920,7 +920,7 @@ function bootstrap_mean_CI(x::AbstractArray{Float64},
     sample_size = length(x)
     means = zeros(n_boots)
     for i in 1:n_boots
-        means[i] = StatsBase.mean(sample(x, sample_size))
+        means[i] = StatsBase.mean(StatsBase.sample(x, sample_size))
     end
     ci_lower = quantile(means, q_lower)
     ci_upper = quantile(means, q_upper)
