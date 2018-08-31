@@ -635,7 +635,7 @@ function RAD_set_to_distmat(df::DataFrames.DataFrame, dist::Any)
     x = convert(Array, x[:,2:nx])
 
     #compute distances between all pairs of RADs
-    return pairwise(dist, x) #, sample_names
+    return Distances.pairwise(dist, x) #, sample_names
 end
 
 function RAD_set_cMDS(df::DataFrames.DataFrame, d::Array{Float64,2}, dim::Int64=2, accumulate_pos_eigenvalues::Bool=true)
