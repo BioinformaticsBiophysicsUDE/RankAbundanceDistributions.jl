@@ -642,7 +642,7 @@ function RAD_set_cMDS(df::DataFrames.DataFrame, d::Array{Float64,2}, dim::Int64=
 
     #compute eigenvalues
     G = MultivariateStats.dmat2gram(d)
-    E = LinearAlgebra.eigen!(Symmetric(G))
+    E = LinearAlgebra.eigen!(LinearAlgebra.Symmetric(G))
 
     #do classical MDS:
     cMDS = MultivariateStats.classical_mds(d, dim)
