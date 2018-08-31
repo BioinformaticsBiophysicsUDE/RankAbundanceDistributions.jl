@@ -1218,9 +1218,9 @@ Output:
 """
 function RAD_set_plot(RADs::DataFrames.DataFrame, plot_CIs::Bool=false)
     if plot_CIs == true
-        return @df RADs plot(:rank, :abundance, xaxis=("rank",:log10), yaxis=("abundance",:log10), ribbon=(:abundance-:lower_ci,:upper_ci-:abundance), group=:sample)
+        return StatPlots.@df RADs plot(:rank, :abundance, xaxis=("rank",:log10), yaxis=("abundance",:log10), ribbon=(:abundance-:lower_ci,:upper_ci-:abundance), group=:sample)
     else
-        return @df RADs plot(:rank, :abundance, group=:sample, xaxis=(:log10, "rank"), yaxis=(:log10, "abundance"))
+        return StatPlots.@df RADs plot(:rank, :abundance, group=:sample, xaxis=(:log10, "rank"), yaxis=(:log10, "abundance"))
     end
 end
 
