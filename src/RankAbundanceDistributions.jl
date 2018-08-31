@@ -239,7 +239,7 @@ function MaxRank_normalize(
         end
         vtryPos -= 1
         
-        dict = countmap(v[1:vtryPos])
+        dict = StatsBase.countmap(v[1:vtryPos])
 
         normalized_abundance[:,iter] = sort(collect(values(dict)),rev=true)
         
@@ -248,7 +248,7 @@ function MaxRank_normalize(
     end
     
     # average normalized abundance
-    res_abund = vec(mean(normalized_abundance,dims=2))
+    res_abund = vec(StatsBase.mean(normalized_abundance,dims=2))
     ci_lower = zeros(R)
     ci_upper = zeros(R)
 
@@ -260,11 +260,11 @@ function MaxRank_normalize(
         for j in 1:R
             #for each rank we bootstrap the means
             for i in 1:n_boots
-                means[i] = mean(sample(normalized_abundance[j,:], n))
+                means[i] = StatsBase.mean(StatsBase.sample(normalized_abundance[j,:], n))
             end
             #... and compute the lower and upper quantile
-            ci_lower[j] = quantile(means, quantile_lower)
-            ci_upper[j] = quantile(means, quantile_upper)
+            ci_lower[j] = StatsBase.quantile(means, quantile_lower)
+            ci_upper[j] = StatsBase.quantile(means, quantile_upper)
         end
         return DataFrames.DataFrame(rank = 1:R, #ranks
                          abundance = res_abund, #mean normalized abundances
