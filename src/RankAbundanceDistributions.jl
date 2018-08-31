@@ -802,7 +802,7 @@ function RAD_cmds_set_means(cMDSclusters::DataFrames.DataFrame, normRADs::DataFr
         x = DataFrames.by(normRADs[convert(Array{Bool,1},
                                 map(x -> in(x, samples_i), normRADs[:sample])),:],
                :rank,
-               df -> mean(df[:abundance]))
+               df -> StatsBase.mean(df[:abundance]))
         new_mean_RAD[:mean_abundance] = x[:x1]
 
         #determine the min for each rank in the set:
@@ -864,7 +864,7 @@ function RAD_set_mean(
     end
 
     meanRAD = hcat(DataFrames.DataFrame(sample = fill(name,richness[1])),
-                   DataFrames.by(RADs, :rank, df -> mean(df[:abundance])))
+                   DataFrames.by(RADs, :rank, df -> StatsBase.mean(df[:abundance])))
     rename!(meanRAD, :x1 => :abundance)
 
 
@@ -920,7 +920,7 @@ function bootstrap_mean_CI(x::AbstractArray{Float64},
     sample_size = length(x)
     means = zeros(n_boots)
     for i in 1:n_boots
-        means[i] = mean(sample(x, sample_size))
+        means[i] = StatsBase.mean(sample(x, sample_size))
     end
     ci_lower = quantile(means, q_lower)
     ci_upper = quantile(means, q_upper)
@@ -977,7 +977,7 @@ function RAD_log10log10coarser(features::Array{Float64,2}, n::Int64)
     #second do the averaging of abundances for each pseudo-log10-rank
     for j in 1:n_samples
         for i in 1:n
-            lg_features_t[i,j] = log10(mean(features_t[lowers[i]:uppers[i],j]))
+            lg_features_t[i,j] = log10(StatsBase.mean(features_t[lowers[i]:uppers[i],j]))
         end
     end
     
@@ -1071,7 +1071,7 @@ function RADs_average(
     ci_lower = zeros(R)
     ci_upper = zeros(R)
     
-    average = vec(mean(RADs,1))
+    average = vec(StatsBase.mean(RADs,1))
 
     q_lower = 0.5*(1.0-conf_level)
     q_upper = 1.0-q_lower
@@ -1156,10 +1156,10 @@ function log10binmeans(
         while (j < jstop) && (xsort[j] < xbins[i+1])
             j+=1
         end
-        xmeans[i] = mean(xsort[jmin:(j-1)])
-        ymeans[i] = mean(ysort[jmin:(j-1)])
-        ci_lower[i] = ymeans[i] - ci_factor * sem(ysort[jmin:(j-1)])
-        ci_upper[i] = ymeans[i] + ci_factor * sem(ysort[jmin:(j-1)])
+        xmeans[i] = StatsBase.mean(xsort[jmin:(j-1)])
+        ymeans[i] = StatsBase.mean(ysort[jmin:(j-1)])
+        ci_lower[i] = ymeans[i] - ci_factor * StatsBase.sem(ysort[jmin:(j-1)])
+        ci_upper[i] = ymeans[i] + ci_factor * StatsBase.sem(ysort[jmin:(j-1)])
         if j == jstop
             break
         end
@@ -1261,7 +1261,7 @@ Output:
         - data frame with columns 'sample' and 'entropy'
 """
 function RAD_set_entropies(RADs::DataFrames.DataFrame)
-    return rename(DataFrames.by(RADs, :sample, d -> StatsBase.entropy(d[:abundance])), :x1 => :entropy)
+    return DataFrames.rename(DataFrames.by(RADs, :sample, d -> StatsBase.entropy(d[:abundance])), :x1 => :entropy)
 end
 
 """
@@ -1276,9 +1276,9 @@ Output:
 """
 function RAD_set_evenness(RADs::DataFrames.DataFrame, method::Symbol=:Shannon)
     if method == :Shannon
-        return rename(DataFrames.by(RADs, :sample, d -> StatsBase.entropy(d[:abundance])/log(length(d[:abundance]))), :x1 => :evenness)
+        return DataFrames.rename(DataFrames.by(RADs, :sample, d -> StatsBase.entropy(d[:abundance])/log(length(d[:abundance]))), :x1 => :evenness)
     elseif method == :Heip
-        return rename(DataFrames.by(RADs, :sample, d -> exp(StatsBase.entropy(d[:abundance]))/length(d[:abundance])), :x1 => :evenness)
+        return DataFrames.rename(DataFrames.by(RADs, :sample, d -> exp(StatsBase.entropy(d[:abundance]))/length(d[:abundance])), :x1 => :evenness)
     else
         error("evenness method not implemented")
     end
