@@ -593,7 +593,7 @@ function RAD_set_normalize(
         
         from_ix, to_ix = RAD_subsets_for_procs(df, procIDs)
         n_procs = length(procIDs)
-        refs = Array{Future}(undef, n_procs)
+        refs = Array{Distributed.Future}(undef, n_procs)
         
         #distribute the normalization over processes, one data frame subset per process
         for i_proc in 1:n_procs
