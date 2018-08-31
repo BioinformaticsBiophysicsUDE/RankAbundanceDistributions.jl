@@ -49,6 +49,7 @@ import Distributions
 import GZip
 import LinearAlgebra
 import MultivariateStats
+import Plots
 import Random
 import Statistics
 import StatPlots
