@@ -105,7 +105,7 @@ Output:
 """
 function produce_random_RAD(label::String, richness::Int64, max_abundance::Int64)
     abundances = sort!(rand(1:max_abundance, richness), rev=true)
-    return DataFrame(sample = fill(label, richness),
+    return DataFrames.DataFrame(sample = fill(label, richness),
                      rank = collect(1:richness),
                      abundance = abundances)
 end
@@ -126,7 +126,7 @@ Output:
 - data frame of the uniform RAD
 """
 function produce_uniform_RAD(label::String, richness::Int64, abundance::Int64)
-    return DataFrame(sample = fill(label, richness),
+    return DataFrames.DataFrame(sample = fill(label, richness),
                      rank = collect(1:richness),
                      abundance = fill(abundance, richness))
 end
