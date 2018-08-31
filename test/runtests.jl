@@ -1,9 +1,9 @@
-using DataFrames
 using Base
 using Test 
 using Distributed
 using CSV
 using Statistics
+using DataFrames
 using RankAbundanceDistributions
 
 # write your own tests here

@@ -162,7 +162,7 @@ Note: We will rarely call this function directly, but usually from function RAD_
 """
 
 function MaxRank_normalize(
-                           df::SubDataFrame, #dataframe containing at least columns "rank" and "abundance"
+                           df::DataFrames.SubDataFrame, #dataframe containing at least columns "rank" and "abundance"
                            R::Int64, #max. rank to which we normalize
                            n::Int64, #runs to be averaged over
                            conf_level::Float64=0., #quantile size of bootstrapped confidence interval of abundance average, e.g. 0.9 is from 0.05 to 0.95 quantile
@@ -185,7 +185,7 @@ function MaxRank_normalize(
         normalized_abundance = copy(df[:abundance])
         normalized_abundance = normalized_abundance / sum(normalized_abundance)
 
-        return DataFrame(rank = collect(1:R), 
+        return DataFrames.DataFrame(rank = collect(1:R), 
                          abundance = normalized_abundance, 
                          lower_ci = normalized_abundance, 
                          upper_ci = normalized_abundance) 
@@ -266,12 +266,12 @@ function MaxRank_normalize(
             ci_lower[j] = quantile(means, quantile_lower)
             ci_upper[j] = quantile(means, quantile_upper)
         end
-        return DataFrame(rank = 1:R, #ranks
+        return DataFrames.DataFrame(rank = 1:R, #ranks
                          abundance = res_abund, #mean normalized abundances
                          lower_ci = ci_lower, #lower confidence interval of mean
                          upper_ci = ci_upper)  #upper confidence interval of mean
     else #no confidence interval => copy res_abund to lower_ci and upper_ci
-        return DataFrame(rank = 1:R, #ranks
+        return DataFrames.DataFrame(rank = 1:R, #ranks
                          abundance = res_abund, #mean normalized abundances
                          lower_ci = res_abund, 
                          upper_ci = res_abund) 
@@ -296,7 +296,7 @@ Output:
 
 """
 function RAD_downsample(
-                        df::DataFrame, #dataframe containing at least columns "rank" and "abundance"
+                        df::DataFrames.DataFrame, #dataframe containing at least columns "rank" and "abundance"
                         R::Int64, #max. rank to which we sample
                         sample_name::String="downsampled"
                         )
@@ -359,7 +359,7 @@ function RAD_downsample(
     
     new_abundance = sort(collect(values(dict)),rev=true)
         
-    return DataFrame(sample = fill(sample_name, R),
+    return DataFrames.DataFrame(sample = fill(sample_name, R),
                      rank = 1:R, 
                      abundance = new_abundance)
 end
@@ -401,7 +401,7 @@ function random_powerlaw_RAD(S::Int64, #richness
         a[i] += 1
     end
 
-    return DataFrame(sample = fill(sample_name, S),
+    return DataFrames.DataFrame(sample = fill(sample_name, S),
                      rank = 1:S, 
                      abundance = sort(a, rev=true))
 end
@@ -449,7 +449,7 @@ function random_brokenstick_RAD(S::Int64, #richness
         a[i] += 1
     end
 
-    return DataFrame(sample = fill(sample_name, S),
+    return DataFrames.DataFrame(sample = fill(sample_name, S),
                      rank = 1:S, 
                      abundance = sort(a, rev=true))
 end
@@ -494,13 +494,13 @@ function brokenstick_RAD(S::Int64, #richness
         a = a ./ sum(a)
     end
     
-    return DataFrame(sample = fill(sample_name, S),
+    return DataFrames.DataFrame(sample = fill(sample_name, S),
                      rank = 1:S, 
                      abundance = sort(a, rev=true))
 end
 
 function RAD_rank_cutoff_normalization(
-                           df::SubDataFrame, #dataframe containing at least columns "rank" and "abundance"
+                           df::DataFrames.SubDataFrame, #dataframe containing at least columns "rank" and "abundance"
                            R::Int64 #max. rank to which we normalize (cutoff)
                            )
 
@@ -516,7 +516,7 @@ function RAD_rank_cutoff_normalization(
         normalized_abundance = copy(df[:abundance])
         normalized_abundance ./= sum(normalized_abundance)
         
-        return DataFrame(rank = 1:R, 
+        return DataFrames.DataFrame(rank = 1:R, 
                          abundance = normalized_abundance, 
                          lower_ci = normalized_abundance, 
                          upper_ci = normalized_abundance) 
@@ -527,7 +527,7 @@ function RAD_rank_cutoff_normalization(
     p = df[:abundance]/N
     normalized_abundance = p[1:R]/sum(p[1:R])
     
-    return DataFrame(rank = collect(1:R), #ranks
+    return DataFrames.DataFrame(rank = collect(1:R), #ranks
                      abundance = normalized_abundance, #normalized abundances
                      lower_ci = normalized_abundance, #pseudo-lower CI
                      upper_ci = normalized_abundance) #pseudo-upper CI
@@ -565,7 +565,7 @@ Output:
 """
 
 function RAD_set_normalize(
-                           df::DataFrame; #dataframe containing at least columns "rank", "abundance", "sample"
+                           df::DataFrames.DataFrame; #dataframe containing at least columns "rank", "abundance", "sample"
                            R::Int64=0, #max. rank to which we normalize: 0 for R=min(r_max), or specific R
                            n::Int64=10, #runs to be averaged over
                            conf_level::Float64=0., #confidence level, eg 0.95=95%
@@ -624,7 +624,7 @@ function RAD_set_normalize(
     return new_df #dataframe of normalized RADs
 end
 
-function RAD_set_to_distmat(df::DataFrame, dist::Any)
+function RAD_set_to_distmat(df::DataFrames.DataFrame, dist::Any)
 
     #reformat long dataframe to wide to array
     x = unstack(df, :rank, :sample, :abundance)
@@ -637,7 +637,7 @@ function RAD_set_to_distmat(df::DataFrame, dist::Any)
     return pairwise(dist, x) #, sample_names
 end
 
-function RAD_set_cMDS(df::DataFrame, d::Array{Float64,2}, dim::Int64=2, accumulate_pos_eigenvalues::Bool=true)
+function RAD_set_cMDS(df::DataFrames.DataFrame, d::Array{Float64,2}, dim::Int64=2, accumulate_pos_eigenvalues::Bool=true)
 
     #compute eigenvalues
     G = dmat2gram(d)
@@ -647,7 +647,7 @@ function RAD_set_cMDS(df::DataFrame, d::Array{Float64,2}, dim::Int64=2, accumula
     cMDS = classical_mds(d, dim)
 
     #add column for sample names for identification to MDS points
-    output_df = hcat(DataFrame(sample = unique(df[:sample])), convert(DataFrame, cMDS'))
+    output_df = hcat(DataFrames.DataFrame(sample = unique(df[:sample])), convert(DataFrames.DataFrame, cMDS'))
     
     eigenvals = sort(E.values[:,1],rev=true)
 
@@ -661,10 +661,10 @@ function RAD_set_cMDS(df::DataFrame, d::Array{Float64,2}, dim::Int64=2, accumula
     end
 end
 
-function RAD_kmeans_cMDS(cMDS::DataFrame, k::Int64)
+function RAD_kmeans_cMDS(cMDS::DataFrames.DataFrame, k::Int64)
   dims = length(cMDS)
   clust_result = kmeans(convert(Array,(cMDS[:,2:dims]))',k)
-  output_df = hcat(cMDS, DataFrame(cluster = clust_result.assignments))
+  output_df = hcat(cMDS, DataFrames.DataFrame(cluster = clust_result.assignments))
 #  sort!(output_df, cols = [:cluster])
   return output_df, clust_result
 end
@@ -693,7 +693,7 @@ Output:
 
   - kmedoids output
 """
-function RAD_kmedoids(cMDS::DataFrame, distmat::Array{Float64,2}, k::Int64, sort::Bool=false ...)
+function RAD_kmedoids(cMDS::DataFrames.DataFrame, distmat::Array{Float64,2}, k::Int64, sort::Bool=false ...)
     clust_result = kmedoids(distmat,k ...)
     if sort
         sorted = copy(clust_result.assignments)
@@ -701,16 +701,16 @@ function RAD_kmedoids(cMDS::DataFrame, distmat::Array{Float64,2}, k::Int64, sort
         for i in 1:k
             sorted[clust_result.assignments .== clust_ids[i]] = i
         end
-        output_df = hcat(cMDS, DataFrame(cluster = sorted))
+        output_df = hcat(cMDS, DataFrames.DataFrame(cluster = sorted))
     else
-        output_df = hcat(cMDS, DataFrame(cluster = clust_result.assignments))
+        output_df = hcat(cMDS, DataFrames.DataFrame(cluster = clust_result.assignments))
     end
     
     return output_df, clust_result
 end
 
 #cluster RADs by affinity propagation
-function RAD_set_affinityprop(df::DataFrame, cMDS::DataFrame, distmat::Array{Float64,2}, f::Float64=1.0)
+function RAD_set_affinityprop(df::DataFrames.DataFrame, cMDS::DataFrames.DataFrame, distmat::Array{Float64,2}, f::Float64=1.0)
 
     S = -distmat
     Smin = minimum(S)
@@ -719,18 +719,18 @@ function RAD_set_affinityprop(df::DataFrame, cMDS::DataFrame, distmat::Array{Flo
     ncols = size(S)[1]
     S = S + strength * eye(ncols)
     clust_result = affinityprop(S)
-    output_df = hcat(cMDS, DataFrame(cluster = clust_result.assignments))
+    output_df = hcat(cMDS, DataFrames.DataFrame(cluster = clust_result.assignments))
 #    sort!(output_df, cols = [:cluster])
     
     return output_df, S, clust_result
 end
 
-function RAD_set_representatives(cMDSclusters::DataFrame, normRADs::DataFrame, sets::Tuple)
+function RAD_set_representatives(cMDSclusters::DataFrames.DataFrame, normRADs::DataFrames.DataFrame, sets::Tuple)
     n_sets = length(sets)
     n_dim =  find(names(cMDSclusters) .== :cluster)[1]-2 #this is the column of the highest dimension
 
     #initialize array for the representative RADs
-    all_repres_RADs = DataFrame(vcat(eltypes(normRADs),Float64,Float64,Int64),
+    all_repres_RADs = DataFrames.DataFrame(vcat(eltypes(normRADs),Float64,Float64,Int64),
                                 vcat(names(normRADs),:min,:max,:set), 0)
 
     for i in 1:n_sets
@@ -776,14 +776,14 @@ function RAD_set_representatives(cMDSclusters::DataFrame, normRADs::DataFrame, s
     
 end
 
-function RAD_cmds_set_means(cMDSclusters::DataFrame, normRADs::DataFrame, sets::Tuple)
+function RAD_cmds_set_means(cMDSclusters::DataFrames.DataFrame, normRADs::DataFrames.DataFrame, sets::Tuple)
     n_sets = length(sets)
     n_dim =  find(names(cMDSclusters) .== :cluster)[1]-2 #this is the column of the highest dimension
 
     #initialize arrays for the mean RADs
-    all_mean_RADs = DataFrame([Int64;Float64;Float64;Float64;Int64],[:rank;:mean_abundance;:min;:max;:set], 0)
+    all_mean_RADs = DataFrames.DataFrame([Int64;Float64;Float64;Float64;Int64],[:rank;:mean_abundance;:min;:max;:set], 0)
     max_rank = maximum(normRADs[:rank])
-    new_mean_RAD = DataFrame([Int64;Float64;Float64;Float64;Int64],[:rank;:mean_abundance;:min;:max;:set], max_rank)
+    new_mean_RAD = DataFrames.DataFrame([Int64;Float64;Float64;Float64;Int64],[:rank;:mean_abundance;:min;:max;:set], max_rank)
     
     for i in 1:n_sets
         #set_i is the part of cMDSclusters that forms the ith set
@@ -849,7 +849,7 @@ Output:
 
 """
 function RAD_set_mean(
-                      RADs::DataFrame;
+                      RADs::DataFrames.DataFrame;
                       name::String="mean",
                       normalize::Bool=false,
                       conf_level::Float64=0.90, #confidence level
@@ -862,7 +862,7 @@ function RAD_set_mean(
         error("RADs do not have same richness")
     end
 
-    meanRAD = hcat(DataFrame(sample = fill(name,richness[1])),
+    meanRAD = hcat(DataFrames.DataFrame(sample = fill(name,richness[1])),
                    by(RADs, :rank, df -> mean(df[:abundance])))
     rename!(meanRAD, :x1 => :abundance)
 
@@ -1037,7 +1037,7 @@ function RADs_median(
     pi_lower = map(j -> percentile(RADs[:,j], perc), 1:R)
     pi_upper = map(j -> percentile(RADs[:,j], perc_upper), 1:R)
     
-    return DataFrame(
+    return DataFrames.DataFrame(
         rank = collect(1:R),
         abundance = medians,
         pi_lower = pi_lower,
@@ -1080,7 +1080,7 @@ function RADs_average(
         ci_lower[j], ci_upper[j] = bootstrap_mean_CI(RADs[:,j], q_lower, q_upper, n_boots)
     end
     
-    return DataFrame(
+    return DataFrames.DataFrame(
         rank = collect(1:R),
         abundance = average,
         lower_ci = ci_lower,
@@ -1164,7 +1164,7 @@ function log10binmeans(
         end
     end
     
-    return DataFrame(
+    return DataFrames.DataFrame(
             xmeans = xmeans, ymeans = ymeans, 
             ci_lower = ci_lower, ci_upper = ci_upper
             )
@@ -1183,10 +1183,10 @@ Output:
 
     - RADs as long data frame with three columns: rank, abundance (not normalized), sample.
 """    
-function RAD_set_from_OTU_table(OTUtable::DataFrame, skip::Int64=0)
+function RAD_set_from_OTU_table(OTUtable::DataFrames.DataFrame, skip::Int64=0)
     n_columns = length(OTUtable) 
     RADs = 
-        DataFrame(
+        DataFrames.DataFrame(
             rank = Array{Float64,1},
             abundance = Array{Float64,1},
             sample = Array{String,1}
@@ -1196,9 +1196,9 @@ function RAD_set_from_OTU_table(OTUtable::DataFrame, skip::Int64=0)
         rank = collect(1:length(abundance))
         sample = fill(string(names(OTUtable)[i]), length(abundance))
         if i == (skip+1)
-            RADs = DataFrame(rank = rank, abundance = abundance, sample = sample)
+            RADs = DataFrames.DataFrame(rank = rank, abundance = abundance, sample = sample)
         else
-            RADs = vcat(RADs, DataFrame(rank = rank, abundance = abundance, sample = sample))
+            RADs = vcat(RADs, DataFrames.DataFrame(rank = rank, abundance = abundance, sample = sample))
         end
     end
     return RADs
@@ -1216,7 +1216,7 @@ Input:
 Output:
         - plot
 """
-function RAD_set_plot(RADs::DataFrame, plot_CIs::Bool=false)
+function RAD_set_plot(RADs::DataFrames.DataFrame, plot_CIs::Bool=false)
     if plot_CIs == true
         return @df RADs plot(:rank, :abundance, xaxis=("rank",:log10), yaxis=("abundance",:log10), ribbon=(:abundance-:lower_ci,:upper_ci-:abundance), group=:sample)
     else
@@ -1259,7 +1259,7 @@ Input:
 Output:
         - data frame with columns 'sample' and 'entropy'
 """
-function RAD_set_entropies(RADs::DataFrame)
+function RAD_set_entropies(RADs::DataFrames.DataFrame)
     return rename(by(RADs, :sample, d -> entropy(d[:abundance])), :x1 => :entropy)
 end
 
@@ -1273,7 +1273,7 @@ Input:
 Output:
         - data frame with columns 'sample' and 'evenness'
 """
-function RAD_set_evenness(RADs::DataFrame, method::Symbol=:Shannon)
+function RAD_set_evenness(RADs::DataFrames.DataFrame, method::Symbol=:Shannon)
     if method == :Shannon
         return rename(by(RADs, :sample, d -> entropy(d[:abundance])/log(length(d[:abundance]))), :x1 => :evenness)
     elseif method == :Heip
@@ -1292,7 +1292,7 @@ Input:
 Output:
     - minimum richness
 """
-function RAD_set_minimum_richness(RADs::DataFrame)
+function RAD_set_minimum_richness(RADs::DataFrames.DataFrame)
     max_ranks = by(RADs, :sample, d -> maximum(d[:rank]))
     return minimum(max_ranks[:x1])
 end
@@ -1307,7 +1307,7 @@ Input:
 Output:
     - data frame with columns :sample and :richness
 """
-function RAD_set_richness(RADs::DataFrame)
+function RAD_set_richness(RADs::DataFrames.DataFrame)
     max_ranks = by(RADs, :sample, d -> maximum(d[:rank]))
     return rename!(max_ranks, :x1 => :richness)
 end
@@ -1321,7 +1321,7 @@ Input:
 Output:
     - data frame with columns :sample and :abundance_sum
 """
-function RAD_set_abundance_sum(RADs::DataFrame)
+function RAD_set_abundance_sum(RADs::DataFrames.DataFrame)
     abundance_sums = by(RADs, :sample, d -> sum(d[:abundance]))
     return rename!(abundance_sums, :x1 => :abundance_sum)
 end
@@ -1337,7 +1337,7 @@ Output:
 
     - true if abundance columns are approximately numerically the same
 """
-function test_approx_abundance_equality(RAD_1::DataFrame, RAD_2::DataFrame)
+function test_approx_abundance_equality(RAD_1::DataFrames.DataFrame, RAD_2::DataFrames.DataFrame)
     if length(RAD_1[:abundance]) != length(RAD_2[:abundance])
         println("different lengths of abundance arrays")
         return false
@@ -1371,7 +1371,7 @@ end
         
 """
 function RAD_subsets_for_procs(
-    df::DataFrame, #RADs
+    df::DataFrames.DataFrame, #RADs
     procIDs::Array{Int64,1} #process numbers (IDs)
     )
 
@@ -1415,7 +1415,7 @@ Output:
      - data frame consisting of the subset of samples.
             
 """
-function RAD_samples_subset(df::DataFrame, subset::Array{String})
+function RAD_samples_subset(df::DataFrames.DataFrame, subset::Array{String})
     subset = convert(Array{Bool}, map(x -> in(x, subset), df[:sample]))
     return df[subset,:]
 end
@@ -1435,7 +1435,7 @@ Output:
      - data frame consisting of the subset of samples.
             
 """
-function RAD_samples_regex_set(df::DataFrame, subset::Array{String})    
+function RAD_samples_regex_set(df::DataFrames.DataFrame, subset::Array{String})    
     n = length(subset)
     re_set = map(i -> Regex(subset[i]), 1:n)
     subset = convert(Array{Bool}, map(x -> is_in_regex_set(x, re_set), df[:sample]))
@@ -1465,9 +1465,9 @@ Output:
     - data frame with various summary information
     
 """
-function RAD_set_summary(df::DataFrame)
+function RAD_set_summary(df::DataFrames.DataFrame)
     n_categories = 16
-    summary = DataFrame(quantity =
+    summary = DataFrames.DataFrame(quantity =
                                     ["number of RADs",
                                      "richness minimum",
                                      "richness median",
@@ -1569,7 +1569,7 @@ Output:
     - writes the files to disk
     
 """
-function split_RAD_set_into_files(rads::DataFrame, stem_name::AbstractString, n_files::Int64)
+function split_RAD_set_into_files(rads::DataFrames.DataFrame, stem_name::AbstractString, n_files::Int64)
     
     samples = unique(rads[:sample])
     n_samples = length(samples)
@@ -1606,12 +1606,12 @@ Output:
     - NRAD data frame with columns sample, rank, and abundance.
 """
 
-function RAD_set_from_matrix(df_wide::DataFrame)
+function RAD_set_from_matrix(df_wide::DataFrames.DataFrame)
     samples = convert(Array{String},map(x->string(x),df_wide[:,1]))
     n_samples = length(samples)
     R = size(df_wide)[2]-1 #MaxRank
 
-    return DataFrame(
+    return DataFrames.DataFrame(
                      sample = repeat(samples, inner=[R]), 
                      rank = repeat(collect(1:R), outer=[n_samples]),
                      abundance = vec(convert(Array{Float64,2},df_wide[:,2:end])')
@@ -1631,7 +1631,7 @@ Output:
 
 """
 
-function RAD_to_population_vector(RAD::DataFrame)
+function RAD_to_population_vector(RAD::DataFrames.DataFrame)
     rmax = maximum(RAD[:rank])
     N_indivs = sum(RAD[:abundance])
     v = Array(Int64, N_indivs) #population vector v
@@ -1656,7 +1656,7 @@ Output:
 - RADs with abundances turned into probabilities. (Re-)Sorted according to "sample" and "rank".
 
 """
-function RAD_set_abundance_normalization(RADs::DataFrame)
+function RAD_set_abundance_normalization(RADs::DataFrames.DataFrame)
     rads = copy(RADs)
     sort!(rads, cols = [:sample, :rank])
     rads[:abundance] = by(rads, :sample, df -> df[:abundance] ./ sum(df[:abundance]))[:x1]
