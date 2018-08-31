@@ -922,8 +922,8 @@ function bootstrap_mean_CI(x::AbstractArray{Float64},
     for i in 1:n_boots
         means[i] = StatsBase.mean(StatsBase.sample(x, sample_size))
     end
-    ci_lower = quantile(means, q_lower)
-    ci_upper = quantile(means, q_upper)
+    ci_lower = Statistics.quantile(means, q_lower)
+    ci_upper = Statistics.quantile(means, q_upper)
 
     return ci_lower, ci_upper
 end
@@ -1128,7 +1128,7 @@ function log10binmeans(
         xmax = maximum(x)
     end
     
-    ci_factor = quantile(Normal(), 1.0-(1.0-conf_level)/2.0)
+    ci_factor = Statistics.quantile(Normal(), 1.0-(1.0-conf_level)/2.0)
     
     xminlog10 = log10(xmin)
     xmaxlog10 = log10(xmax)
