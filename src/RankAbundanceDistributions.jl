@@ -208,7 +208,7 @@ function MaxRank_normalize(
     for iter in 1:n #average over n RADs
 
         #shuffle v randomly:
-        shuffle!(v)
+        Random.shuffle!(v)
 
         vpos = (N_indivs+1.0)/2.
         vtryPos = 0
@@ -324,7 +324,7 @@ function RAD_downsample(
         N_start = N_stop+1
     end
 
-    shuffle!(v)
+    Random.shuffle!(v)
     
     vpos = (N_indivs+1.0)/2.
     vtryPos = 0
