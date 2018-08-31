@@ -865,7 +865,7 @@ function RAD_set_mean(
 
     meanRAD = hcat(DataFrames.DataFrame(sample = fill(name,richness[1])),
                    DataFrames.by(RADs, :rank, df -> StatsBase.mean(df[:abundance])))
-    rename!(meanRAD, :x1 => :abundance)
+    DataFrames.rename!(meanRAD, :x1 => :abundance)
 
 
     q_lower = 0.5*(1.0-conf_level) #lower quantile of CI
@@ -1310,7 +1310,7 @@ Output:
 """
 function RAD_set_richness(RADs::DataFrames.DataFrame)
     max_ranks = DataFrames.by(RADs, :sample, d -> maximum(d[:rank]))
-    return rename!(max_ranks, :x1 => :richness)
+    return DataFrames.rename!(max_ranks, :x1 => :richness)
 end
 
 """
@@ -1324,7 +1324,7 @@ Output:
 """
 function RAD_set_abundance_sum(RADs::DataFrames.DataFrame)
     abundance_sums = DataFrames.by(RADs, :sample, d -> sum(d[:abundance]))
-    return rename!(abundance_sums, :x1 => :abundance_sum)
+    return DataFrames.rename!(abundance_sums, :x1 => :abundance_sum)
 end
 
 """
