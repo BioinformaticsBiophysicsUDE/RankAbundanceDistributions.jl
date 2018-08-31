@@ -641,11 +641,11 @@ end
 function RAD_set_cMDS(df::DataFrames.DataFrame, d::Array{Float64,2}, dim::Int64=2, accumulate_pos_eigenvalues::Bool=true)
 
     #compute eigenvalues
-    G = dmat2gram(d)
+    G = MultivariateStats.dmat2gram(d)
     E = LinearAlgebra.eigen!(Symmetric(G))
 
     #do classical MDS:
-    cMDS = classical_mds(d, dim)
+    cMDS = MultivariateStats.classical_mds(d, dim)
 
     #add column for sample names for identification to MDS points
     output_df = hcat(DataFrames.DataFrame(sample = unique(df[:sample])), convert(DataFrames.DataFrame, cMDS'))
